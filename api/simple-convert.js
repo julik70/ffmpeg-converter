@@ -5,16 +5,6 @@ const { promisify } = require('util');
 
 const execAsync = promisify(exec);
 
-// Try to get FFmpeg path
-let ffmpegPath = 'ffmpeg'; // Default fallback
-try {
-  const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
-  ffmpegPath = ffmpegInstaller.path;
-  console.log('✅ FFmpeg installer found:', ffmpegPath);
-} catch (e) {
-  console.log('⚠️ Using system FFmpeg');
-}
-
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -30,7 +20,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log('🎵 Audio conversion request received');
+    console.log('🎵 Simple audio conversion request received');
     
     // Get the uploaded file data
     const contentType = req.headers['content-type'];
@@ -60,8 +50,8 @@ export default async function handler(req, res) {
         fs.writeFileSync(inputPath, buffer);
         console.log(`💾 Saved input file: ${inputPath}`);
 
-        // Convert using FFmpeg command
-        const ffmpegCommand = `"${ffmpegPath}" -y -i "${inputPath}" -vn -acodec libmp3lame -b:a 192k "${outputPath}"`;
+        // Convert using system FFmpeg (simpler approach)
+        const ffmpegCommand = `ffmpeg -y -i "${inputPath}" -vn -acodec libmp3lame -b:a 192k "${outputPath}"`;
         console.log('🎛️ FFmpeg command:', ffmpegCommand);
         
         try {
