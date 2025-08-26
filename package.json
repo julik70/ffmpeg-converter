@@ -2,7 +2,7 @@
   "name": "audio-converter-api",
   "version": "1.0.0",
   "description": "Free cloud audio converter API",
-  "main": "api/convert.js",
+  "main": "server.js",
   "scripts": {
     "dev": "node server.js",
     "vercel-dev": "vercel dev",
