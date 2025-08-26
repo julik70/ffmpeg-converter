@@ -59,9 +59,11 @@ app.post('/api/convert', async (req, res) => {
     fs.writeFileSync(inputPath, buffer);
     console.log(`💾 Saved input file: ${inputPath}`);
 
-    // Convert using FFmpeg command
-    const ffmpegCommand = `"${ffmpegPath}" -y -i "${inputPath}" -vn -acodec libmp3lame -b:a 192k "${outputPath}"`;
+    // Convert using FFmpeg command with better error handling
+    let ffmpegCommand = `"${ffmpegPath}" -y -i "${inputPath}" -vn -acodec libmp3lame -b:a 192k -f mp3 "${outputPath}"`;
     console.log('🎛️ FFmpeg command:', ffmpegCommand);
+    console.log('📁 Input file exists:', fs.existsSync(inputPath));
+    console.log('📊 Input file size:', fs.existsSync(inputPath) ? fs.statSync(inputPath).size : 'N/A');
     
     try {
       const { stdout, stderr } = await execAsync(ffmpegCommand, { timeout: 120000 });
@@ -69,7 +71,23 @@ app.post('/api/convert', async (req, res) => {
       if (stderr) console.log('FFmpeg stderr:', stderr);
     } catch (execError) {
       console.error('❌ FFmpeg execution error:', execError);
-      throw new Error(`FFmpeg failed: ${execError.message}`);
+      console.error('❌ FFmpeg stderr:', execError.stderr);
+      console.error('❌ FFmpeg stdout:', execError.stdout);
+      console.error('❌ Exit code:', execError.code);
+      
+      // Try simpler command as fallback
+      console.log('🔄 Trying simpler FFmpeg command...');
+      ffmpegCommand = `"${ffmpegPath}" -i "${inputPath}" -acodec libmp3lame "${outputPath}"`;
+      console.log('🎛️ Fallback command:', ffmpegCommand);
+      
+      try {
+        const { stdout: stdout2, stderr: stderr2 } = await execAsync(ffmpegCommand, { timeout: 120000 });
+        console.log('✅ Fallback conversion completed');
+        if (stderr2) console.log('Fallback FFmpeg stderr:', stderr2);
+      } catch (fallbackError) {
+        console.error('❌ Fallback also failed:', fallbackError);
+        throw new Error(`FFmpeg failed: ${execError.message}`);
+      }
     }
 
     // Read the converted file
