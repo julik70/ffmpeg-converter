@@ -64,7 +64,7 @@ app.post('/api/convert', async (req, res) => {
     console.log('🎛️ FFmpeg command:', ffmpegCommand);
     
     try {
-      const { stdout, stderr } = await execAsync(ffmpegCommand, { timeout: 30000 });
+      const { stdout, stderr } = await execAsync(ffmpegCommand, { timeout: 120000 });
       console.log('✅ Conversion completed');
       if (stderr) console.log('FFmpeg stderr:', stderr);
     } catch (execError) {
