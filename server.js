@@ -107,6 +107,12 @@ app.post('/api/convert', async (req, res) => {
       console.warn('⚠️ Cleanup warning:', cleanupErr.message);
     }
 
+    // Force garbage collection if available
+    if (global.gc) {
+      global.gc();
+      console.log('♻️ Forced garbage collection');
+    }
+
     // Send the MP3 file
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Content-Length', outputBuffer.length);
@@ -115,6 +121,22 @@ app.post('/api/convert', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Conversion error:', error);
+    
+    // Clean up any leftover files even on error
+    try {
+      if (fs.existsSync(inputPath)) fs.unlinkSync(inputPath);
+      if (fs.existsSync(outputPath)) fs.unlinkSync(outputPath);
+      console.log('🗑️ Cleaned up files after error');
+    } catch (cleanupErr) {
+      console.warn('⚠️ Error cleanup warning:', cleanupErr.message);
+    }
+    
+    // Force garbage collection on error too
+    if (global.gc) {
+      global.gc();
+      console.log('♻️ Forced garbage collection after error');
+    }
+    
     res.status(500).json({ 
       error: 'Conversion failed', 
       details: error.message 
